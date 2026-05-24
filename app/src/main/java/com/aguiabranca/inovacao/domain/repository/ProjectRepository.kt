@@ -31,4 +31,3 @@ interface ProjectRepository {
         progressPct: Int
     ): Result<Project>
 }
-

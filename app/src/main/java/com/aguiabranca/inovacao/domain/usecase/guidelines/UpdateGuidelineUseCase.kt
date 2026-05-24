@@ -16,7 +16,7 @@ class UpdateGuidelineUseCase @Inject constructor(
             ?: return Result.failure(Exception("Usuário não autenticado"))
         if (session.user.role != UserRole.LEADERSHIP)
             return Result.failure(SecurityException("Apenas líderes podem editar orientações"))
-        return repository.update(id, title.trim(), description.trim(), pillar, status)
+        return repository.update(id, title.trim(), description.trim(), pillar)
     }
 }
 

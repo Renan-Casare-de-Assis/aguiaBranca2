@@ -29,7 +29,7 @@ class CreateProjectUseCase @Inject constructor(
         return repository.create(
             ideaId, title.trim(), objective.trim(),
             ProjectStage.DISCOVERY, ProjectStatus.ON_TRACK,
-            session.user.uid, startDate, targetEndDate, investment
+            session.user.id, startDate, targetEndDate, investment
         )
     }
 }

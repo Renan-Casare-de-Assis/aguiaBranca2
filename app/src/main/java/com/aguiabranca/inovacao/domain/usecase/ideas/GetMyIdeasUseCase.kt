@@ -12,7 +12,7 @@ class GetMyIdeasUseCase @Inject constructor(
     suspend operator fun invoke(): Result<List<Idea>> {
         val session = authRepository.getSession()
             ?: return Result.failure(Exception("Usuário não autenticado"))
-        return repository.getMyIdeas(session.user.uid)
+        return repository.getByOperator(session.user.id)
     }
 }
 

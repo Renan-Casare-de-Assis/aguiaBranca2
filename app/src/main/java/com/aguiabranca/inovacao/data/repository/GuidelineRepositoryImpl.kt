@@ -17,6 +17,31 @@ class GuidelineRepositoryImpl @Inject constructor(
     private val guidelineDao: GuidelineDao
 ) : GuidelineRepository {
 
+    override suspend fun getById(id: String): Result<Guideline> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                OracleDataSource.execute { conn ->
+                    val sql = "SELECT ID, TITULO, DESCRICAO, PILAR, VALIDO_DE, VALIDO_ATE, STATUS, CRIADO_POR, CRIADO_EM, ATUALIZADO_EM FROM DIRETRIZES WHERE ID = ?"
+                    val stmt = conn.prepareStatement(sql)
+                    stmt.setString(1, id)
+                    val rs = stmt.executeQuery()
+                    if (!rs.next()) throw Exception("Diretriz não encontrada")
+                    Guideline(
+                        id          = rs.getString("ID"),
+                        title       = rs.getString("TITULO"),
+                        description = rs.getString("DESCRICAO"),
+                        pillar      = rs.getString("PILAR"),
+                        validFrom   = rs.getTimestamp("VALIDO_DE")?.time,
+                        validTo     = rs.getTimestamp("VALIDO_ATE")?.time,
+                        status      = GuidelineStatus.fromDb(rs.getString("STATUS")),
+                        createdBy   = rs.getString("CRIADO_POR") ?: "",
+                        createdAt   = rs.getTimestamp("CRIADO_EM")?.time ?: 0L,
+                        updatedAt   = rs.getTimestamp("ATUALIZADO_EM")?.time ?: 0L
+                    )
+                }.getOrThrow()
+            }
+        }
+
     override suspend fun getAll(): Result<List<Guideline>> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -62,7 +87,7 @@ class GuidelineRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun create(title: String, description: String, pillar: String, createdBy: String): Result<Guideline> =
+    override suspend fun create(title: String, description: String, category: String, authorId: String): Result<Guideline> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val id = UUID.randomUUID().toString()
@@ -72,33 +97,32 @@ class GuidelineRepositoryImpl @Inject constructor(
                     stmt.setString(1, id)
                     stmt.setString(2, title)
                     stmt.setString(3, description)
-                    stmt.setString(4, pillar)
-                    stmt.setString(5, createdBy)
+                    stmt.setString(4, category)
+                    stmt.setString(5, authorId)
                     stmt.executeUpdate()
                     conn.commit()
                 }.getOrThrow()
-                Guideline(id, title, description, pillar, null, null,
-                    GuidelineStatus.ACTIVE, createdBy,
+                Guideline(id, title, description, category, null, null,
+                    GuidelineStatus.ACTIVE, authorId,
                     System.currentTimeMillis(), System.currentTimeMillis())
             }
         }
 
-    override suspend fun update(id: String, title: String, description: String, pillar: String, status: GuidelineStatus): Result<Guideline> =
+    override suspend fun update(id: String, title: String, description: String, category: String): Result<Guideline> =
         withContext(Dispatchers.IO) {
             runCatching {
                 OracleDataSource.execute { conn ->
-                    val sql = "UPDATE DIRETRIZES SET TITULO=?, DESCRICAO=?, PILAR=?, STATUS=?, ATUALIZADO_EM=SYSTIMESTAMP WHERE ID=?"
+                    val sql = "UPDATE DIRETRIZES SET TITULO=?, DESCRICAO=?, PILAR=?, ATUALIZADO_EM=SYSTIMESTAMP WHERE ID=?"
                     val stmt = conn.prepareStatement(sql)
                     stmt.setString(1, title)
                     stmt.setString(2, description)
-                    stmt.setString(3, pillar)
-                    stmt.setString(4, status.toDb())
-                    stmt.setString(5, id)
+                    stmt.setString(3, category)
+                    stmt.setString(4, id)
                     stmt.executeUpdate()
                     conn.commit()
                 }.getOrThrow()
-                Guideline(id, title, description, pillar, null, null,
-                    status, "", System.currentTimeMillis(), System.currentTimeMillis())
+                Guideline(id, title, description, category, null, null,
+                    GuidelineStatus.ACTIVE, "", System.currentTimeMillis(), System.currentTimeMillis())
             }
         }
 

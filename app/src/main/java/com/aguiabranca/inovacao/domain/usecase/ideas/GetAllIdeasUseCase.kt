@@ -15,7 +15,7 @@ class GetAllIdeasUseCase @Inject constructor(
             ?: return Result.failure(Exception("Usuário não autenticado"))
         if (session.user.role != UserRole.MANAGER)
             return Result.failure(SecurityException("Apenas gestores podem ver todas as ideias"))
-        return repository.getAllIdeas()
+        return repository.getAll()
     }
 }
 

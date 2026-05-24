@@ -44,3 +44,11 @@ val Gray200 = Color(0xFFE2E4E7)
 val Gray100 = Color(0xFFF3F4F5)
 val Gray50  = Color(0xFFF9FAFB)
 val White   = Color(0xFFFFFFFF)
+
+// Azul Marinho Águia Branca
+val AzulMarinho   = Color(0xFF0D1B2A)
+val Dourado       = Color(0xFFC9A84C)
+val VerdeSuccess  = Color(0xFF4CAF50)
+val CinzaClaro    = Color(0xFFF5F5F5)
+val BrancoCard    = Color(0xFFFFFFFF)
+val TextoSecundario = Color(0xFF9E9E9E)

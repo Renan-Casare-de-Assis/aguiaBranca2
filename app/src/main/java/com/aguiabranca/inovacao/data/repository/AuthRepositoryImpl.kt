@@ -7,6 +7,7 @@ import com.aguiabranca.inovacao.data.remote.oracle.OracleDataSource
 import com.aguiabranca.inovacao.domain.model.Session
 import com.aguiabranca.inovacao.domain.model.User
 import com.aguiabranca.inovacao.domain.model.UserRole
+import com.aguiabranca.inovacao.domain.model.toDb
 import com.aguiabranca.inovacao.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -30,17 +31,16 @@ class AuthRepositoryImpl @Inject constructor(
                     val rs = stmt.executeQuery()
                     if (!rs.next()) throw Exception("Email ou senha incorretos")
                     User(
-                        uid    = rs.getString("ID_USUARIO"),
+                        id     = rs.getString("ID_USUARIO"),
                         name   = rs.getString("NOME"),
                         email  = rs.getString("EMAIL"),
                         role   = UserRole.fromDb(rs.getString("PAPEL")),
-                        area   = rs.getString("AREA"),
-                        active = rs.getInt("ATIVO") == 1
+                        unit   = rs.getString("AREA")
                     )
                 }
                 val user = result.getOrThrow()
                 // Cache local
-                userDao.insert(UserEntity(user.uid, user.name, user.email, user.role.toDb(), user.area, user.active))
+                userDao.insert(UserEntity(user.id, user.name, user.email, user.role.toDb(), user.unit, true))
                 // Salva sessão
                 sessionManager.saveSession(user)
                 Session(user)

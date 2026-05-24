@@ -36,7 +36,7 @@ class IdeaRepositoryImpl @Inject constructor(
         updatedAt     = rs.getTimestamp("ATUALIZADO_EM")?.time ?: 0L
     )
 
-    override suspend fun getMyIdeas(operatorId: String): Result<List<Idea>> =
+    override suspend fun getByOperator(operatorId: String): Result<List<Idea>> =
         withContext(Dispatchers.IO) {
             runCatching {
                 OracleDataSource.execute { conn ->
@@ -59,7 +59,7 @@ class IdeaRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getAllIdeas(): Result<List<Idea>> =
+    override suspend fun getAll(): Result<List<Idea>> =
         withContext(Dispatchers.IO) {
             runCatching {
                 OracleDataSource.execute { conn ->
@@ -78,6 +78,20 @@ class IdeaRepositoryImpl @Inject constructor(
                         IdeaPriority.fromDb(e.priority), e.managerComment,
                         e.approvedBy, e.approvedAt, e.createdAt, e.updatedAt)
                 }
+            }
+        }
+
+    override suspend fun getById(id: String): Result<Idea> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                OracleDataSource.execute { conn ->
+                    val sql = "SELECT * FROM IDEIAS WHERE ID = ?"
+                    val stmt = conn.prepareStatement(sql)
+                    stmt.setString(1, id)
+                    val rs = stmt.executeQuery()
+                    if (!rs.next()) throw Exception("Ideia não encontrada")
+                    mapRow(rs)
+                }.getOrThrow()
             }
         }
 

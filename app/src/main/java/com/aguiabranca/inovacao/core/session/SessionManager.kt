@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.aguiabranca.inovacao.domain.model.Session
 import com.aguiabranca.inovacao.domain.model.User
 import com.aguiabranca.inovacao.domain.model.UserRole
+import com.aguiabranca.inovacao.domain.model.toDb
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,12 +20,12 @@ class SessionManager @Inject constructor(
 
     fun saveSession(user: User) {
         prefs.edit()
-            .putString("uid", user.uid)
+            .putString("uid", user.id)
             .putString("name", user.name)
             .putString("email", user.email)
             .putString("role", user.role.toDb())
-            .putString("area", user.area)
-            .putBoolean("active", user.active)
+            .putString("area", user.unit)
+            .putBoolean("active", true)
             .apply()
     }
 
@@ -37,7 +38,7 @@ class SessionManager @Inject constructor(
         val active = prefs.getBoolean("active", true)
 
         val role = UserRole.fromDb(roleStr)
-        val user = User(uid, name, email, role, area, active)
+        val user = User(uid, name, email, role, area, null, 0L)
         return Session(user)
     }
 

@@ -16,6 +16,7 @@ import com.aguiabranca.inovacao.ui.theme.*
 @Composable
 fun AguiaTopBar(
     title: String,
+    navigationIcon: @Composable (() -> Unit)? = null,
     subtitle: String? = null,
     notificationCount: Int = 0,
     userInitials: String = "",
@@ -38,11 +39,17 @@ fun AguiaTopBar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = White
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    navigationIcon?.invoke()
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = White
+                    )
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically

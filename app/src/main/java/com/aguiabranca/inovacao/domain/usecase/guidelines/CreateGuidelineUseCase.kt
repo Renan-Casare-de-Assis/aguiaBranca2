@@ -17,7 +17,7 @@ class CreateGuidelineUseCase @Inject constructor(
             return Result.failure(SecurityException("Apenas líderes podem criar orientações"))
         if (title.isBlank()) return Result.failure(Exception("Título não pode estar vazio"))
         if (description.isBlank()) return Result.failure(Exception("Descrição não pode estar vazia"))
-        return repository.create(title.trim(), description.trim(), pillar, session.user.uid)
+        return repository.create(title.trim(), description.trim(), pillar, session.user.id)
     }
 }
 
