@@ -66,3 +66,18 @@ val LoginRoleBlueText = Color(0xFF43639F)
 val LoginRoleGreenText = Color(0xFF208355)
 val LoginRoleGoldText = Color(0xFF9B7A1F)
 
+// Perfil (layout claro inspirado no mock aprovado)
+val ProfilePageBackground = Color(0xFFF1F4F8)
+val ProfileSurfaceBackground = White
+val ProfileSurfaceBorder = Color(0xFFE2E7EF)
+val ProfilePrimaryText = Color(0xFF1D2430)
+val ProfileSecondaryText = Color(0xFF6D7584)
+val ProfileMutedText = Color(0xFF9AA2AF)
+val ProfileActionText = Color(0xFFD24D67)
+val ProfilePositiveBg = Color(0xFFE7F7EE)
+val ProfilePositiveText = Color(0xFF2B9A5A)
+val ProfileChipBg = Color(0xFFE7EEF9)
+val ProfileChipText = Color(0xFF37568E)
+val ProfileDarkMetric = Color(0xFF213A64)
+val ProfileGreenMetric = Color(0xFF43B35D)
+

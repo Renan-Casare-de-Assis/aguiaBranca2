@@ -3,8 +3,10 @@ package com.aguiabranca.inovacao.ui.operator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aguiabranca.inovacao.data.session.SessionManager
+import com.aguiabranca.inovacao.domain.model.Guideline
 import com.aguiabranca.inovacao.domain.model.Idea
 import com.aguiabranca.inovacao.domain.model.User
+import com.aguiabranca.inovacao.domain.repository.GuidelineRepository
 import com.aguiabranca.inovacao.domain.repository.IdeaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +18,14 @@ data class HomeOperatorUiState(
     val isLoading: Boolean = false,
     val user: User? = null,
     val myIdeas: List<Idea> = emptyList(),
+    val guidelines: List<Guideline> = emptyList(),
     val error: String? = null
 )
 
 @HiltViewModel
 class HomeOperatorViewModel @Inject constructor(
     private val ideaRepository: IdeaRepository,
+    private val guidelineRepository: GuidelineRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -45,6 +49,10 @@ class HomeOperatorViewModel @Inject constructor(
                         isLoading = false,
                         error = e.message
                     )
+                }
+            guidelineRepository.getAll()
+                .onSuccess { guidelines ->
+                    _uiState.value = _uiState.value.copy(guidelines = guidelines)
                 }
         }
     }
