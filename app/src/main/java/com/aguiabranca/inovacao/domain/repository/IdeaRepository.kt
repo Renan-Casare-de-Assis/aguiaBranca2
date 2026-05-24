@@ -12,4 +12,5 @@ interface IdeaRepository {
     suspend fun create(title: String, description: String, category: IdeaCategory, operatorId: String, operatorName: String, unit: String?): Result<Idea>
     suspend fun updateStatus(id: String, status: IdeaStatus, comment: String?): Result<Unit>
     suspend fun updatePriority(id: String, priority: IdeaPriority): Result<Unit>
+    suspend fun delete(id: String): Result<Unit>
 }

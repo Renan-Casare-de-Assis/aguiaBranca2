@@ -20,7 +20,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8081/api/\"")
+        }
+        
         release {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8081/api/\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -40,6 +45,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -83,5 +89,4 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.oracle.jdbc)
 }

@@ -21,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WorkOutline
@@ -38,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -91,6 +94,7 @@ fun MyIdeasScreen(
     onBack: () -> Unit,
     onNavigateToHome: () -> Unit = onBack,
     onNavigateToNewIdea: () -> Unit = {},
+    onNavigateToIdeaEdit: (String) -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     viewModel: MyIdeasViewModel = hiltViewModel()
 ) {
@@ -109,6 +113,8 @@ fun MyIdeasScreen(
 
     val approvedCount = uiState.ideas.count { it.status.name.equals("APPROVED", ignoreCase = true) }
     val underReviewCount = uiState.ideas.count { it.status.name.equals("UNDER_REVIEW", ignoreCase = true) }
+
+    LaunchedEffect(Unit) { viewModel.load() }
 
     val filteredIdeas = remember(uiState.ideas, searchQuery, selectedFilter) {
         uiState.ideas.filter { idea ->
@@ -209,7 +215,11 @@ fun MyIdeasScreen(
 
                 else -> {
                     items(filteredIdeas, key = { it.id }) { idea ->
-                        IdeaDetailCard(idea = idea)
+                        IdeaDetailCard(
+                            idea = idea,
+                            onEdit = onNavigateToIdeaEdit,
+                            onDelete = { viewModel.deleteIdea(it) }
+                        )
                     }
                 }
             }
@@ -460,7 +470,11 @@ private fun SummaryCell(
 }
 
 @Composable
-private fun IdeaDetailCard(idea: Idea) {
+private fun IdeaDetailCard(
+    idea: Idea,
+    onEdit: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")) }
 
     AguiaCard(accentColor = statusAccentColor(idea.status.name)) {
@@ -559,6 +573,20 @@ private fun IdeaDetailCard(idea: Idea) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { onEdit(idea.id) }) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp), tint = Brand700)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Editar", color = Brand700)
+                    }
+                    TextButton(onClick = { onDelete(idea.id) }) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp), tint = Danger500)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Excluir", color = Danger500)
+                    }
                 }
             }
         }

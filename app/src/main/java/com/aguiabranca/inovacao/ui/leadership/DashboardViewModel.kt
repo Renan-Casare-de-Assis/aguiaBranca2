@@ -49,9 +49,9 @@ class DashboardViewModel @Inject constructor(
 
     private fun mapFriendlyError(error: Throwable): String {
         val raw = error.message.orEmpty()
-        if (raw.contains("OracleDataSource", ignoreCase = true) ||
-            raw.contains("NoClassDefFoundError", ignoreCase = true) ||
-            raw.contains("java.sql", ignoreCase = true)
+        if (raw.contains("timeout", ignoreCase = true) ||
+            raw.contains("refused", ignoreCase = true) ||
+            raw.contains("UnknownHost", ignoreCase = true)
         ) {
             return "Falha ao carregar indicadores remotos. Exibindo dados de demonstracao."
         }

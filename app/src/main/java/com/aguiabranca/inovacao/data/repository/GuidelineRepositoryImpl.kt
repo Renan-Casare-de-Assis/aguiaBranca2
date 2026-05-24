@@ -2,74 +2,64 @@ package com.aguiabranca.inovacao.data.repository
 
 import com.aguiabranca.inovacao.data.local.room.dao.GuidelineDao
 import com.aguiabranca.inovacao.data.local.room.entity.GuidelineEntity
-import com.aguiabranca.inovacao.data.remote.oracle.OracleDataSource
+import com.aguiabranca.inovacao.data.remote.api.CreateGuidelineRequestDto
+import com.aguiabranca.inovacao.data.remote.api.GuidelineApiService
+import com.aguiabranca.inovacao.data.remote.api.UpdateGuidelineRequestDto
+import com.aguiabranca.inovacao.data.remote.api.toDomain
 import com.aguiabranca.inovacao.domain.model.Guideline
 import com.aguiabranca.inovacao.domain.model.GuidelineStatus
 import com.aguiabranca.inovacao.domain.repository.GuidelineRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class GuidelineRepositoryImpl @Inject constructor(
-    private val guidelineDao: GuidelineDao
+    private val guidelineDao: GuidelineDao,
+    private val guidelineApi: GuidelineApiService
 ) : GuidelineRepository {
 
     override suspend fun getById(id: String): Result<Guideline> =
         withContext(Dispatchers.IO) {
             runCatching {
-                OracleDataSource.execute { conn ->
-                    val sql = "SELECT ID, TITULO, DESCRICAO, PILAR, VALIDO_DE, VALIDO_ATE, STATUS, CRIADO_POR, CRIADO_EM, ATUALIZADO_EM FROM DIRETRIZES WHERE ID = ?"
-                    val stmt = conn.prepareStatement(sql)
-                    stmt.setString(1, id)
-                    val rs = stmt.executeQuery()
-                    if (!rs.next()) throw Exception("Diretriz não encontrada")
-                    Guideline(
-                        id          = rs.getString("ID"),
-                        title       = rs.getString("TITULO"),
-                        description = rs.getString("DESCRICAO"),
-                        pillar      = rs.getString("PILAR"),
-                        validFrom   = rs.getTimestamp("VALIDO_DE")?.time,
-                        validTo     = rs.getTimestamp("VALIDO_ATE")?.time,
-                        status      = GuidelineStatus.fromDb(rs.getString("STATUS")),
-                        createdBy   = rs.getString("CRIADO_POR") ?: "",
-                        createdAt   = rs.getTimestamp("CRIADO_EM")?.time ?: 0L,
-                        updatedAt   = rs.getTimestamp("ATUALIZADO_EM")?.time ?: 0L
+                val remote = guidelineApi.getById(id).toDomain()
+                guidelineDao.insert(
+                    GuidelineEntity(
+                        remote.id,
+                        remote.title,
+                        remote.description,
+                        remote.pillar,
+                        remote.validFrom,
+                        remote.validTo,
+                        remote.status.toDb(),
+                        remote.createdBy,
+                        remote.createdAt,
+                        remote.updatedAt
                     )
-                }.getOrThrow()
+                )
+                remote
+            }.recoverCatching {
+                val local = guidelineDao.getById(id) ?: throw Exception("Diretriz não encontrada")
+                Guideline(
+                    local.id,
+                    local.title,
+                    local.description,
+                    local.pillar,
+                    local.validFrom,
+                    local.validTo,
+                    GuidelineStatus.fromDb(local.status),
+                    local.createdBy,
+                    local.createdAt,
+                    local.updatedAt
+                )
             }
         }
 
     override suspend fun getAll(): Result<List<Guideline>> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val result = OracleDataSource.execute { conn ->
-                    val sql = "SELECT ID, TITULO, DESCRICAO, PILAR, VALIDO_DE, VALIDO_ATE, STATUS, CRIADO_POR, CRIADO_EM, ATUALIZADO_EM FROM DIRETRIZES ORDER BY CRIADO_EM DESC"
-                    val stmt = conn.prepareStatement(sql)
-                    val rs = stmt.executeQuery()
-                    val list = mutableListOf<Guideline>()
-                    while (rs.next()) {
-                        list.add(
-                            Guideline(
-                                id          = rs.getString("ID"),
-                                title       = rs.getString("TITULO"),
-                                description = rs.getString("DESCRICAO"),
-                                pillar      = rs.getString("PILAR"),
-                                validFrom   = rs.getTimestamp("VALIDO_DE")?.time,
-                                validTo     = rs.getTimestamp("VALIDO_ATE")?.time,
-                                status      = GuidelineStatus.fromDb(rs.getString("STATUS")),
-                                createdBy   = rs.getString("CRIADO_POR") ?: "",
-                                createdAt   = rs.getTimestamp("CRIADO_EM")?.time ?: 0L,
-                                updatedAt   = rs.getTimestamp("ATUALIZADO_EM")?.time ?: 0L
-                            )
-                        )
-                    }
-                    list
-                }
-                val guidelines = result.getOrThrow()
-                // Cache local
+                val guidelines = guidelineApi.getAll().map { it.toDomain() }
                 guidelineDao.deleteAll()
                 guidelineDao.insertAll(guidelines.map {
                     GuidelineEntity(it.id, it.title, it.description, it.pillar,
@@ -78,7 +68,6 @@ class GuidelineRepositoryImpl @Inject constructor(
                 })
                 guidelines
             }.recoverCatching {
-                // Fallback para cache local se Oracle falhar
                 guidelineDao.getAll().map { e ->
                     Guideline(e.id, e.title, e.description, e.pillar,
                         e.validFrom, e.validTo, GuidelineStatus.fromDb(e.status),
@@ -90,52 +79,65 @@ class GuidelineRepositoryImpl @Inject constructor(
     override suspend fun create(title: String, description: String, category: String, authorId: String): Result<Guideline> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val id = UUID.randomUUID().toString()
-                OracleDataSource.execute { conn ->
-                    val sql = "INSERT INTO DIRETRIZES (ID, TITULO, DESCRICAO, PILAR, STATUS, CRIADO_POR, CRIADO_EM, ATUALIZADO_EM) VALUES (?, ?, ?, ?, 'ATIVO', ?, SYSTIMESTAMP, SYSTIMESTAMP)"
-                    val stmt = conn.prepareStatement(sql)
-                    stmt.setString(1, id)
-                    stmt.setString(2, title)
-                    stmt.setString(3, description)
-                    stmt.setString(4, category)
-                    stmt.setString(5, authorId)
-                    stmt.executeUpdate()
-                    conn.commit()
-                }.getOrThrow()
-                Guideline(id, title, description, category, null, null,
-                    GuidelineStatus.ACTIVE, authorId,
-                    System.currentTimeMillis(), System.currentTimeMillis())
+                val created = guidelineApi.create(
+                    CreateGuidelineRequestDto(
+                        title = title,
+                        description = description,
+                        category = category,
+                        authorId = authorId
+                    )
+                ).toDomain()
+                guidelineDao.insert(
+                    GuidelineEntity(
+                        created.id,
+                        created.title,
+                        created.description,
+                        created.pillar,
+                        created.validFrom,
+                        created.validTo,
+                        created.status.toDb(),
+                        created.createdBy,
+                        created.createdAt,
+                        created.updatedAt
+                    )
+                )
+                created
             }
         }
 
     override suspend fun update(id: String, title: String, description: String, category: String): Result<Guideline> =
         withContext(Dispatchers.IO) {
             runCatching {
-                OracleDataSource.execute { conn ->
-                    val sql = "UPDATE DIRETRIZES SET TITULO=?, DESCRICAO=?, PILAR=?, ATUALIZADO_EM=SYSTIMESTAMP WHERE ID=?"
-                    val stmt = conn.prepareStatement(sql)
-                    stmt.setString(1, title)
-                    stmt.setString(2, description)
-                    stmt.setString(3, category)
-                    stmt.setString(4, id)
-                    stmt.executeUpdate()
-                    conn.commit()
-                }.getOrThrow()
-                Guideline(id, title, description, category, null, null,
-                    GuidelineStatus.ACTIVE, "", System.currentTimeMillis(), System.currentTimeMillis())
+                val updated = guidelineApi.update(
+                    id,
+                    UpdateGuidelineRequestDto(
+                        title = title,
+                        description = description,
+                        category = category
+                    )
+                ).toDomain()
+                guidelineDao.insert(
+                    GuidelineEntity(
+                        updated.id,
+                        updated.title,
+                        updated.description,
+                        updated.pillar,
+                        updated.validFrom,
+                        updated.validTo,
+                        updated.status.toDb(),
+                        updated.createdBy,
+                        updated.createdAt,
+                        updated.updatedAt
+                    )
+                )
+                updated
             }
         }
 
     override suspend fun delete(id: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                OracleDataSource.execute { conn ->
-                    val sql = "DELETE FROM DIRETRIZES WHERE ID = ?"
-                    val stmt = conn.prepareStatement(sql)
-                    stmt.setString(1, id)
-                    stmt.executeUpdate()
-                    conn.commit()
-                }.getOrThrow()
+                guidelineApi.delete(id)
                 guidelineDao.deleteById(id)
             }
         }

@@ -19,5 +19,10 @@ interface ProjectDao {
 
     @Query("DELETE FROM cached_projects")
     suspend fun deleteAll()
-}
 
+    @Query("DELETE FROM cached_projects WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Update
+    suspend fun update(project: ProjectEntity)
+}

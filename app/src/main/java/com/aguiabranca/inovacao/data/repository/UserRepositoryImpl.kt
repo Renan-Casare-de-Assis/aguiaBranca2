@@ -3,7 +3,9 @@ package com.aguiabranca.inovacao.data.repository
 import android.util.Log
 import android.content.Context
 import com.aguiabranca.inovacao.data.local.room.dao.UserDao
-import com.aguiabranca.inovacao.data.remote.oracle.OracleDataSource
+import com.aguiabranca.inovacao.data.remote.api.LoginRequestDto
+import com.aguiabranca.inovacao.data.remote.api.UserApiService
+import com.aguiabranca.inovacao.data.remote.api.toDomain
 import com.aguiabranca.inovacao.domain.model.User
 import com.aguiabranca.inovacao.domain.model.UserRole
 import com.aguiabranca.inovacao.domain.repository.UserRepository
@@ -16,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
+    private val userApi: UserApiService,
     @ApplicationContext private val context: Context
 ) : UserRepository {
 
@@ -24,16 +27,6 @@ class UserRepositoryImpl @Inject constructor(
         private const val TEST_PASSWORD = "070589"
     }
 
-    private fun mapUser(rs: java.sql.ResultSet): User = User(
-        id = rs.getString("ID"),
-        name = rs.getString("NOME"),
-        email = rs.getString("EMAIL"),
-        role = UserRole.fromDb(rs.getString("PERFIL")),
-        unit = rs.getString("UNIDADE"),
-        avatarUrl = rs.getString("AVATAR_URL"),
-        createdAt = rs.getTimestamp("CRIADO_EM")?.time ?: 0L
-    )
-
     override suspend fun login(email: String, password: String): Result<User> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -41,18 +34,10 @@ class UserRepositoryImpl @Inject constructor(
                 val normalizedPassword = password.trim()
 
                 try {
-                    Log.d(TAG, "Tentando login Oracle para $normalizedEmail")
-                    OracleDataSource.execute { conn ->
-                        val sql = "SELECT * FROM USUARIOS WHERE EMAIL = ? AND SENHA = ?"
-                        val stmt = conn.prepareStatement(sql)
-                        stmt.setString(1, normalizedEmail)
-                        stmt.setString(2, normalizedPassword)
-                        val rs = stmt.executeQuery()
-                        if (!rs.next()) throw IllegalArgumentException("Email ou senha incorretos.")
-                        mapUser(rs)
-                    }.getOrThrow()
+                    Log.d(TAG, "Tentando login via API para $normalizedEmail")
+                    userApi.login(LoginRequestDto(normalizedEmail, normalizedPassword)).toDomain()
                 } catch (remoteError: Throwable) {
-                    Log.e(TAG, "Falha no login remoto Oracle", remoteError)
+                    Log.e(TAG, "Falha no login remoto da API", remoteError)
 
                     if (!isDebugBuild()) {
                         throw Exception("Não foi possível conectar ao servidor de autenticação.")
@@ -107,30 +92,14 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getById(id: String): Result<User> =
         withContext(Dispatchers.IO) {
             runCatching {
-                OracleDataSource.execute { conn ->
-                    val sql = "SELECT * FROM USUARIOS WHERE ID = ?"
-                    val stmt = conn.prepareStatement(sql)
-                    stmt.setString(1, id)
-                    val rs = stmt.executeQuery()
-                    if (!rs.next()) throw Exception("Usuário não encontrado")
-                    mapUser(rs)
-                }.getOrThrow()
+                userApi.getById(id).toDomain()
             }
         }
 
     override suspend fun getAll(): Result<List<User>> =
         withContext(Dispatchers.IO) {
             runCatching {
-                OracleDataSource.execute { conn ->
-                    val sql = "SELECT * FROM USUARIOS ORDER BY NOME"
-                    val stmt = conn.prepareStatement(sql)
-                    val rs = stmt.executeQuery()
-                    val list = mutableListOf<User>()
-                    while (rs.next()) {
-                        list.add(mapUser(rs))
-                    }
-                    list
-                }.getOrThrow()
+                userApi.getAll().map { it.toDomain() }
             }
         }
 }

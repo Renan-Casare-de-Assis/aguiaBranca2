@@ -19,6 +19,12 @@ sealed class Screen(val route: String) {
         fun createRoute(ideaId: String? = null) =
             if (ideaId != null) "project_form?ideaId=$ideaId" else "project_form"
     }
+    object ProjectEdit        : Screen("project_edit/{projectId}") {
+        fun createRoute(projectId: String) = "project_edit/$projectId"
+    }
+    object IdeaEdit           : Screen("idea_edit/{ideaId}") {
+        fun createRoute(ideaId: String) = "idea_edit/$ideaId"
+    }
     object GuidelinesManager : Screen("guidelines_manager")
     object ProfileManager    : Screen("profile_manager")
 

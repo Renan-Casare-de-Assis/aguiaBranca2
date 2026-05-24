@@ -22,5 +22,13 @@ interface IdeaDao {
 
     @Query("DELETE FROM cached_ideas")
     suspend fun deleteAll()
-}
 
+    @Query("DELETE FROM cached_ideas WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM cached_ideas WHERE operatorId = :operatorId")
+    suspend fun deleteByOperator(operatorId: String)
+
+    @Update
+    suspend fun update(idea: IdeaEntity)
+}

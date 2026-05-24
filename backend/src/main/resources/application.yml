@@ -1,0 +1,18 @@
+server:
+  port: ${BACKEND_PORT:8080}
+
+spring:
+  datasource:
+    url: ${ORACLE_URL:jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL}
+    username: ${ORACLE_USER:RM563592}
+    password: ${ORACLE_PASS:070589}
+    driver-class-name: oracle.jdbc.OracleDriver
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true
+
+logging:
+  level:
+    root: INFO
+    com.aguiabranca.backend: DEBUG
+

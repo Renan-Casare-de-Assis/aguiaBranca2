@@ -19,12 +19,14 @@ import com.aguiabranca.inovacao.ui.operator.ProfileOperatorScreen
 import com.aguiabranca.inovacao.ui.manager.CurationScreen
 import com.aguiabranca.inovacao.ui.manager.GuidelinesManagerScreen
 import com.aguiabranca.inovacao.ui.manager.ProfileManagerScreen
+import com.aguiabranca.inovacao.ui.manager.ProjectEditScreen
 import com.aguiabranca.inovacao.ui.manager.ProjectFormScreen
 import com.aguiabranca.inovacao.ui.manager.ProjectsScreen
 import com.aguiabranca.inovacao.ui.leadership.DashboardScreen
 import com.aguiabranca.inovacao.ui.leadership.GuidelinesCrudScreen
 import com.aguiabranca.inovacao.ui.leadership.PortfolioScreen
 import com.aguiabranca.inovacao.ui.leadership.ProfileLeadershipScreen
+import com.aguiabranca.inovacao.ui.operator.IdeaEditScreen
 
 @Composable
 fun AppNavGraph(
@@ -95,6 +97,7 @@ fun AppNavGraph(
                 onBack = { navController.popBackStack() },
                 onNavigateToHome = { navController.popBackStack() },
                 onNavigateToNewIdea = { navController.navigate(Screen.NewIdea.route) },
+                onNavigateToIdeaEdit = { ideaId -> navController.navigate(Screen.IdeaEdit.createRoute(ideaId)) },
                 onNavigateToProfile = { navController.navigate(Screen.ProfileOperator.route) }
             )
         }
@@ -112,6 +115,17 @@ fun AppNavGraph(
             )
         }
 
+        composable(
+            route = Screen.IdeaEdit.route,
+            arguments = listOf(navArgument("ideaId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val ideaId = backStackEntry.arguments?.getString("ideaId") ?: return@composable
+            IdeaEditScreen(
+                ideaId = ideaId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         // ── Gestor ────────────────────────────────────────────────────────
         composable(Screen.Curation.route) {
             CurationScreen(
@@ -126,6 +140,7 @@ fun AppNavGraph(
         composable(Screen.Projects.route) {
             ProjectsScreen(
                 onNavigateToProjectForm = { navController.navigate(Screen.ProjectForm.createRoute()) },
+                onNavigateToProjectEdit = { projectId -> navController.navigate(Screen.ProjectEdit.createRoute(projectId)) },
                 onBack                  = { navController.popBackStack() },
                 onNavigateToCuration    = {
                     navController.navigate(Screen.Curation.route) {
@@ -150,6 +165,16 @@ fun AppNavGraph(
             val ideaId = backStackEntry.arguments?.getString("ideaId")
             ProjectFormScreen(
                 ideaId = ideaId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.ProjectEdit.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            ProjectEditScreen(
+                projectId = projectId,
                 onBack = { navController.popBackStack() }
             )
         }

@@ -27,6 +27,42 @@ class ProjectFormViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProjectFormUiState())
     val uiState: StateFlow<ProjectFormUiState> = _uiState
 
+    private fun rootCause(t: Throwable): Throwable {
+        var current = t
+        while (current.cause != null && current.cause !== current) {
+            current = current.cause!!
+        }
+        return current
+    }
+
+    private fun friendlyError(error: Throwable): String {
+        val root = rootCause(error)
+        val details = buildString {
+            append(error.message.orEmpty())
+            append(" ")
+            append(root.message.orEmpty())
+            append(" ")
+            append(error::class.java.name)
+            append(" ")
+            append(root::class.java.name)
+            append(" ")
+            append(error.stackTraceToString())
+        }
+
+        return when {
+            Regex("ORA-\\d+").containsMatchIn(details) -> {
+                val oraCode = Regex("ORA-\\d+").find(details)?.value ?: "ORA"
+                "Erro no Oracle ($oraCode) retornado pela API. Verifique o backend."
+            }
+            details.contains("timeout", ignoreCase = true) ||
+                details.contains("refused", ignoreCase = true) ||
+                details.contains("UnknownHost", ignoreCase = true) ||
+                details.contains("Network", ignoreCase = true) -> "Falha de rede ao conectar na API."
+            details.isBlank() -> "Erro ao criar projeto."
+            else -> "Erro ao criar projeto. ${root.message ?: "Sem detalhe"}"
+        }
+    }
+
     fun submit(
         ideaId: String?,
         title: String,
@@ -58,7 +94,7 @@ class ProjectFormViewModel @Inject constructor(
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Erro ao criar projeto."
+                    error = friendlyError(e)
                 )
             }
         }

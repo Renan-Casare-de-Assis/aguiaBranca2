@@ -30,4 +30,5 @@ interface ProjectRepository {
         productivityGainPct: Double,
         progressPct: Int
     ): Result<Project>
+    suspend fun delete(id: String): Result<Unit>
 }

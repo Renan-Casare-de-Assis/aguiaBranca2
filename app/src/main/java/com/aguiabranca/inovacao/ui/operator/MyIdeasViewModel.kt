@@ -16,7 +16,8 @@ data class MyIdeasUiState(
     val isLoading: Boolean = false,
     val user: User? = null,
     val ideas: List<Idea> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val deleteInProgress: String? = null
 )
 
 @HiltViewModel
@@ -46,5 +47,23 @@ class MyIdeasViewModel @Inject constructor(
                 }
         }
     }
-}
 
+    fun deleteIdea(ideaId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(deleteInProgress = ideaId)
+            ideaRepository.delete(ideaId)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        ideas = _uiState.value.ideas.filterNot { it.id == ideaId },
+                        deleteInProgress = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        error = e.message ?: "Erro ao deletar ideia.",
+                        deleteInProgress = null
+                    )
+                }
+        }
+    }
+}

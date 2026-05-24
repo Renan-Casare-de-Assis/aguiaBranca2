@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.Button
@@ -39,6 +41,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -88,6 +91,7 @@ private data class ProjectPreview(
 @Composable
 fun ProjectsScreen(
     onNavigateToProjectForm: () -> Unit,
+    onNavigateToProjectEdit: (String) -> Unit = {},
     onBack: () -> Unit,
     onNavigateToCuration: () -> Unit = onBack,
     onNavigateToProfile: () -> Unit = {},
@@ -95,6 +99,8 @@ fun ProjectsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by rememberSaveable { mutableIntStateOf(1) }
+
+    LaunchedEffect(Unit) { viewModel.load() }
 
     val previewProjects = remember { defaultProjectPreviews() }
     val showProjects = if (uiState.projects.isEmpty()) previewProjects else emptyList()
@@ -198,7 +204,11 @@ fun ProjectsScreen(
 
                 else -> {
                     items(uiState.projects, key = { it.id }) { project ->
-                        ProjectCard(project = project)
+                        ProjectCard(
+                            project = project,
+                            onEdit = onNavigateToProjectEdit,
+                            onDelete = { viewModel.deleteProject(it) }
+                        )
                     }
                 }
             }
@@ -243,7 +253,11 @@ fun ProjectsScreen(
 }
 
 @Composable
-private fun ProjectCard(project: Project) {
+private fun ProjectCard(
+    project: Project,
+    onEdit: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
     val progress = project.progressPct.coerceIn(0, 100)
     val progressColor = when (project.status) {
         ProjectStatus.ON_TRACK -> Success500
@@ -313,6 +327,19 @@ private fun ProjectCard(project: Project) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Gray500, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(project.stage.displayName(), color = Gray500, fontSize = 12.sp)
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { onEdit(project.id) }) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp), tint = Brand700)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Editar", color = Brand700)
+                }
+                TextButton(onClick = { onDelete(project.id) }) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp), tint = Danger500)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Excluir", color = Danger500)
                 }
             }
         }

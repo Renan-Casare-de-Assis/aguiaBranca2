@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "aguiaBranca2"
 include(":app")
+include(":backend")

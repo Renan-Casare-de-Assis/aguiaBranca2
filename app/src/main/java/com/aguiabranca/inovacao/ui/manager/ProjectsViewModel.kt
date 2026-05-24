@@ -13,7 +13,8 @@ import javax.inject.Inject
 data class ProjectsUiState(
     val isLoading: Boolean = false,
     val projects: List<Project> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val deleteInProgress: String? = null
 )
 
 @HiltViewModel
@@ -37,6 +38,25 @@ class ProjectsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = e.message ?: "Erro ao carregar projetos."
+                    )
+                }
+        }
+    }
+
+    fun deleteProject(projectId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(deleteInProgress = projectId)
+            projectRepository.delete(projectId)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        projects = _uiState.value.projects.filterNot { it.id == projectId },
+                        deleteInProgress = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        error = e.message ?: "Erro ao deletar projeto.",
+                        deleteInProgress = null
                     )
                 }
         }
