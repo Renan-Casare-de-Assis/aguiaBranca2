@@ -3,7 +3,6 @@ package com.aguiabranca.inovacao.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -71,10 +70,33 @@ fun AppNavGraph(
             )
         }
         composable(Screen.NewIdea.route) {
-            NewIdeaScreen(onBack = { navController.popBackStack() })
+            NewIdeaScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate(Screen.HomeOperator.route) {
+                        popUpTo(Screen.HomeOperator.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToIdeas = {
+                    navController.navigate(Screen.MyIdeas.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.ProfileOperator.route) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
         composable(Screen.MyIdeas.route) {
-            MyIdeasScreen(onBack = { navController.popBackStack() })
+            MyIdeasScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToHome = { navController.popBackStack() },
+                onNavigateToNewIdea = { navController.navigate(Screen.NewIdea.route) },
+                onNavigateToProfile = { navController.navigate(Screen.ProfileOperator.route) }
+            )
         }
         composable(Screen.GuidelinesOperator.route) {
             GuidelinesOperatorScreen(onBack = { navController.popBackStack() })
@@ -104,7 +126,17 @@ fun AppNavGraph(
         composable(Screen.Projects.route) {
             ProjectsScreen(
                 onNavigateToProjectForm = { navController.navigate(Screen.ProjectForm.createRoute()) },
-                onBack                  = { navController.popBackStack() }
+                onBack                  = { navController.popBackStack() },
+                onNavigateToCuration    = {
+                    navController.navigate(Screen.Curation.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToProfile     = {
+                    navController.navigate(Screen.ProfileManager.route) {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable(
@@ -144,10 +176,39 @@ fun AppNavGraph(
             )
         }
         composable(Screen.Portfolio.route) {
-            PortfolioScreen(onBack = { navController.popBackStack() })
+            PortfolioScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToGuidelines = {
+                    navController.navigate(Screen.GuidelinesCrud.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.ProfileLeadership.route) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
         composable(Screen.GuidelinesCrud.route) {
-            GuidelinesCrudScreen(onBack = { navController.popBackStack() })
+            GuidelinesCrudScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.ProfileLeadership.route) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
         composable(Screen.ProfileLeadership.route) {
             ProfileLeadershipScreen(

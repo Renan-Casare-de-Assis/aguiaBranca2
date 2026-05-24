@@ -41,10 +41,21 @@ class DashboardViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = e.message ?: "Erro ao carregar métricas."
+                        error = mapFriendlyError(e)
                     )
                 }
         }
+    }
+
+    private fun mapFriendlyError(error: Throwable): String {
+        val raw = error.message.orEmpty()
+        if (raw.contains("OracleDataSource", ignoreCase = true) ||
+            raw.contains("NoClassDefFoundError", ignoreCase = true) ||
+            raw.contains("java.sql", ignoreCase = true)
+        ) {
+            return "Falha ao carregar indicadores remotos. Exibindo dados de demonstracao."
+        }
+        return raw.ifBlank { "Erro ao carregar métricas." }
     }
 }
 

@@ -37,7 +37,10 @@ class GuidelinesCrudViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false, guidelines = list)
                 }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = mapFriendlyError(e)
+                    )
                 }
         }
     }
@@ -51,7 +54,20 @@ class GuidelinesCrudViewModel @Inject constructor(
                     load()
                 }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(error = e.message)
+                    _uiState.value = _uiState.value.copy(error = mapFriendlyError(e))
+                }
+        }
+    }
+
+    fun update(id: String, title: String, description: String, category: String) {
+        viewModelScope.launch {
+            guidelineRepository.update(id, title.trim(), description.trim(), category)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(successMessage = "Orientação atualizada!")
+                    load()
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(error = mapFriendlyError(e))
                 }
         }
     }
@@ -64,13 +80,24 @@ class GuidelinesCrudViewModel @Inject constructor(
                     load()
                 }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(error = e.message)
+                    _uiState.value = _uiState.value.copy(error = mapFriendlyError(e))
                 }
         }
     }
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(successMessage = null, error = null)
+    }
+
+    private fun mapFriendlyError(error: Throwable): String {
+        val raw = error.message.orEmpty()
+        if (raw.contains("OracleDataSource", ignoreCase = true) ||
+            raw.contains("NoClassDefFoundError", ignoreCase = true) ||
+            raw.contains("java.sql", ignoreCase = true)
+        ) {
+            return "Falha de conexão com serviço remoto. Tente novamente em instantes."
+        }
+        return raw.ifBlank { "Erro ao processar orientação." }
     }
 }
 

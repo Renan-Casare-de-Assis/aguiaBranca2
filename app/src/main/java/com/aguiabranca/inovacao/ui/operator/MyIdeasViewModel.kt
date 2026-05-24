@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aguiabranca.inovacao.data.session.SessionManager
 import com.aguiabranca.inovacao.domain.model.Idea
+import com.aguiabranca.inovacao.domain.model.User
 import com.aguiabranca.inovacao.domain.repository.IdeaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import javax.inject.Inject
 
 data class MyIdeasUiState(
     val isLoading: Boolean = false,
+    val user: User? = null,
     val ideas: List<Idea> = emptyList(),
     val error: String? = null
 )
@@ -30,8 +32,8 @@ class MyIdeasViewModel @Inject constructor(
 
     fun load() {
         val user = sessionManager.getUser() ?: return
+        _uiState.value = _uiState.value.copy(isLoading = true, user = user, error = null)
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             ideaRepository.getByOperator(user.id)
                 .onSuccess { ideas ->
                     _uiState.value = _uiState.value.copy(isLoading = false, ideas = ideas)
