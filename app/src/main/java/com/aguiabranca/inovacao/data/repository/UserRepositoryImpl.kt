@@ -41,6 +41,7 @@ class UserRepositoryImpl @Inject constructor(
                 val normalizedPassword = password.trim()
 
                 try {
+                    Log.d(TAG, "Tentando login Oracle para $normalizedEmail")
                     OracleDataSource.execute { conn ->
                         val sql = "SELECT * FROM USUARIOS WHERE EMAIL = ? AND SENHA = ?"
                         val stmt = conn.prepareStatement(sql)
@@ -50,15 +51,22 @@ class UserRepositoryImpl @Inject constructor(
                         if (!rs.next()) throw IllegalArgumentException("Email ou senha incorretos.")
                         mapUser(rs)
                     }.getOrThrow()
-                } catch (remoteError: Exception) {
+                } catch (remoteError: Throwable) {
                     Log.e(TAG, "Falha no login remoto Oracle", remoteError)
 
                     if (!isDebugBuild()) {
                         throw Exception("Não foi possível conectar ao servidor de autenticação.")
                     }
 
-                    loginWithLocalFallback(normalizedEmail, normalizedPassword)
-                        ?: throw IllegalArgumentException("Email ou senha incorretos.")
+                    Log.d(TAG, "Ativando fallback local de debug para $normalizedEmail")
+
+                    val fallbackUser = loginWithLocalFallback(normalizedEmail, normalizedPassword)
+                    if (fallbackUser != null) {
+                        Log.d(TAG, "Login via fallback local concluido para $normalizedEmail")
+                        fallbackUser
+                    } else {
+                        throw IllegalArgumentException("Email ou senha incorretos.")
+                    }
                 }
             }
         }
