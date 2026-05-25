@@ -23,7 +23,7 @@ data class ProjectResponse(
 )
 
 data class CreateProjectRequest(
-    val ideaId: String?,
+    val ideaId: String? = null,
     val title: String,
     val objective: String,
     val stage: String,

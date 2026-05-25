@@ -1,0 +1,19 @@
+# Android Studio / IntelliJ
+.idea/
+.gradle/
+build/
+*.iml
+local.properties
+
+# External Build System
+external_build_system/
+
+# OS X
+.DS_Store
+
+# Backend
+backend/build/
+backend/out/
+
+# Artifacts
+.artifacts/

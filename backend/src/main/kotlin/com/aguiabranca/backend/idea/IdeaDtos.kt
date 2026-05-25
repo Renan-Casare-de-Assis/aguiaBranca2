@@ -23,12 +23,12 @@ data class CreateIdeaRequest(
     val category: String,
     val operatorId: String,
     val operatorName: String,
-    val unit: String?
+    val unit: String? = null
 )
 
 data class UpdateIdeaStatusRequest(
     val status: String,
-    val comment: String?
+    val comment: String? = null
 )
 
 data class UpdateIdeaPriorityRequest(
