@@ -347,9 +347,9 @@ fun LoginScreen(
                             }
                         }
 
-                        DemoCredentialRow("Operador", "operator@aguia.com", LoginRoleBlueBg, LoginRoleBlueText)
-                        DemoCredentialRow("Gestor", "manager@aguia.com", Success100, LoginRoleGreenText)
-                        DemoCredentialRow("Líder", "leadership@aguia.com", Gold500.copy(alpha = 0.18f), LoginRoleGoldText)
+                        DemoCredentialRow("Operador", "operador@aguiabranca.com.br", LoginRoleBlueBg, LoginRoleBlueText)
+                        DemoCredentialRow("Gestor", "gestor@aguiabranca.com.br", Success100, LoginRoleGreenText)
+                        DemoCredentialRow("Líder", "lider@aguiabranca.com.br", Gold500.copy(alpha = 0.18f), LoginRoleGoldText)
                     }
                 }
             }
